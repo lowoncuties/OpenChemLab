@@ -11,6 +11,25 @@ wheels/
 # Virtual environments
 .venv
 .env
+.env.*
+!.env.example
+
+# Caddy — real config, TLS material, and runtime dirs belong only on the server
+deploy/caddy/Caddyfile
+deploy/caddy/*.local
+deploy/caddy/data/
+deploy/caddy/config/
+deploy/caddy/secrets/
+deploy/caddy/*.pem
+deploy/caddy/*.crt
+deploy/caddy/*.key
+# If docker-compose is changed to bind-mount ACME data next to the repo:
+caddy_data/
+caddy_config/
+
+# Certificates / keys (never commit)
+*.pem
+*.pfx
 
 /images/
 /.data/

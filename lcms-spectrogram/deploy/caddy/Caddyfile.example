@@ -1,0 +1,17 @@
+# Template for production HTTPS. Copy and edit locally (the real file is gitignored):
+#   cp deploy/caddy/Caddyfile.example deploy/caddy/Caddyfile
+#
+# Replace example.com / www / api with hostnames that match your DNS.
+# TLS certificates are issued automatically once DNS points here and ports 80/443 are open.
+
+example.com {
+	reverse_proxy lcms-spectrogram:8000
+}
+
+www.example.com {
+	redir https://example.com{uri} permanent
+}
+
+api.example.com {
+	reverse_proxy lcms-spectrogram:8000
+}
