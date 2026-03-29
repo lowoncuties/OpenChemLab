@@ -8,6 +8,7 @@ import {
   Divider,
   Grid,
   Group,
+  Image,
   List,
   Loader,
   Paper,
@@ -23,15 +24,21 @@ import { Dropzone, type FileWithPath } from '@mantine/dropzone'
 import { notifications } from '@mantine/notifications'
 import {
   IconAtom2,
+  IconArrowRight,
+  IconBrandGithub,
+  IconBrain,
   IconChartDots3,
   IconDatabaseSearch,
   IconInfoCircle,
   IconScan,
+  IconSchool,
   IconUpload,
+  IconUsersGroup,
 } from '@tabler/icons-react'
 import Plotly from 'plotly.js-dist-min'
 import createPlotlyComponent from 'react-plotly.js/factory'
 import './App.css'
+import heroImage from './assets/hero.png'
 import {
   calculateChemistryMetrics,
   createDemoSession,
@@ -83,6 +90,9 @@ function pickDefaultRt(session: SessionResponse): number | null {
 }
 
 function App() {
+  const currentPath =
+    typeof window === 'undefined' ? '/' : window.location.pathname.replace(/\/+$/, '') || '/'
+  const isWorkspace = currentPath === '/lcms'
   const [session, setSession] = useState<SessionResponse | null>(null)
   const [selectedRt, setSelectedRt] = useState<number | null>(null)
   const [spectrum, setSpectrum] = useState<SpectrumResponse | null>(null)
@@ -154,6 +164,208 @@ function App() {
 
   const selectedRtLabel =
     selectedRt === null ? 'No retention time selected' : `${formatFixed(selectedRt, 2)} min`
+
+  if (!isWorkspace) {
+    return (
+      <AppShell padding="md" header={{ height: 76 }}>
+        <AppShell.Header className="app-header">
+          <Group justify="space-between" align="center" h="100%" px="lg">
+            <div>
+              <Title order={2}>OpenChemLab</Title>
+              <Text c="dimmed" size="sm">
+                Browser-based chemistry tools for students, labs, and teaching teams.
+              </Text>
+            </div>
+            <Button component="a" href="/lcms" rightSection={<IconArrowRight size={16} />}>
+              Open LC-MS tool
+            </Button>
+          </Group>
+        </AppShell.Header>
+
+        <AppShell.Main className="landing-page">
+          <Stack gap="xl">
+            <Paper className="landing-hero" radius="xl" p="xl">
+              <Grid gutter="xl" align="center">
+                <Grid.Col span={{ base: 12, lg: 7 }}>
+                  <Stack gap="md">
+                    <Badge color="teal" variant="light" w="fit-content">
+                      OpenChemLab for accessible chemistry software
+                    </Badge>
+                    <Title order={1} className="landing-title">
+                      Chemistry tools that work in the browser, even when vendor software does not.
+                    </Title>
+                    <Text size="lg" c="dimmed">
+                      OpenChemLab is for students learning analytical chemistry, teachers preparing
+                      practical demonstrations, and small research teams who want shareable,
+                      browser-first workflows.
+                    </Text>
+                    <Group>
+                      <Button
+                        component="a"
+                        href="/lcms"
+                        size="md"
+                        rightSection={<IconArrowRight size={16} />}
+                      >
+                        Go to LC-MS spectrogram
+                      </Button>
+                      <Button component="a" href="#who-its-for" variant="light" size="md">
+                        Who is this for?
+                      </Button>
+                      <Button component="a" href="#about" variant="subtle" size="md">
+                        About the creator
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, lg: 5 }}>
+                  <Paper className="landing-visual" radius="xl" p="md">
+                    <Image
+                      src={heroImage}
+                      alt="OpenChemLab preview illustration"
+                      radius="lg"
+                      className="landing-image"
+                    />
+                  </Paper>
+                </Grid.Col>
+              </Grid>
+            </Paper>
+
+            <SimpleGrid id="who-its-for" cols={{ base: 1, md: 3 }} spacing="lg">
+              <Card className="landing-card" withBorder radius="xl" padding="lg">
+                <ThemeIcon color="teal" variant="light" size={44} radius="xl">
+                  <IconSchool size={22} />
+                </ThemeIcon>
+                <Title order={3} mt="md">
+                  Students
+                </Title>
+                <Text c="dimmed" mt="xs">
+                  Use modern chemistry tools without depending on Windows-only vendor software or
+                  lab-specific installations.
+                </Text>
+              </Card>
+
+              <Card className="landing-card" withBorder radius="xl" padding="lg">
+                <ThemeIcon color="grape" variant="light" size={44} radius="xl">
+                  <IconUsersGroup size={22} />
+                </ThemeIcon>
+                <Title order={3} mt="md">
+                  Teaching labs
+                </Title>
+                <Text c="dimmed" mt="xs">
+                  Share one browser-first workflow with a whole class instead of troubleshooting
+                  local desktop setup on every machine.
+                </Text>
+              </Card>
+
+              <Card className="landing-card" withBorder radius="xl" padding="lg">
+                <ThemeIcon color="cyan" variant="light" size={44} radius="xl">
+                  <IconChartDots3 size={22} />
+                </ThemeIcon>
+                <Title order={3} mt="md">
+                  Small research teams
+                </Title>
+                <Text c="dimmed" mt="xs">
+                  Put targeted tools online quickly so collaborators can inspect data from anywhere
+                  with a browser.
+                </Text>
+              </Card>
+            </SimpleGrid>
+
+            <Paper className="landing-callout" radius="xl" p="xl">
+              <Grid gutter="xl" align="center">
+                <Grid.Col span={{ base: 12, md: 8 }}>
+                  <Stack gap="sm">
+                    <Badge color="violet" variant="light" w="fit-content">
+                      Current tool
+                    </Badge>
+                    <Title order={2}>LC-MS Spectrogram</Title>
+                    <Text c="dimmed">
+                      Explore LC-MS maps, total ion chromatograms, extracted ion traces, and
+                      scan-level spectra from the browser. Thermo RAW is optional when a parser is
+                      installed; mzML works out of the box.
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <Button
+                    component="a"
+                    href="/lcms"
+                    fullWidth
+                    size="md"
+                    rightSection={<IconArrowRight size={16} />}
+                  >
+                    Enter the LC-MS workspace
+                  </Button>
+                </Grid.Col>
+              </Grid>
+            </Paper>
+
+            <Paper id="about" className="about-panel" radius="xl" p="xl">
+              <Grid gutter="xl" align="center">
+                <Grid.Col span={{ base: 12, lg: 7 }}>
+                  <Stack gap="md">
+                    <Badge color="dark" variant="light" w="fit-content">
+                      About the creator
+                    </Badge>
+                    <Title order={2}>Built for people who deserve useful software, not unnecessary barriers.</Title>
+                    <Text c="dimmed" size="lg">
+                      OpenChemLab is shaped by a simple idea: meaningful software should help other
+                      people learn, explore, and do better work. The project sits at the
+                      intersection of scientific tooling and accessible web software.
+                    </Text>
+                    <Text c="dimmed">
+                      The broader interests behind it include AI and machine learning research,
+                      bioinformatics, and neuroscience, with a strong focus on tools that are
+                      practical enough to matter in real educational and research settings.
+                    </Text>
+                    <Group>
+                      <Button
+                        component="a"
+                        href="https://github.com/lowoncuties"
+                        target="_blank"
+                        rel="noreferrer"
+                        leftSection={<IconBrandGithub size={16} />}
+                      >
+                        GitHub: @lowoncuties
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, lg: 5 }}>
+                  <Card className="about-card" withBorder radius="xl" padding="lg">
+                    <Stack gap="md">
+                      <ThemeIcon color="dark" variant="light" size={46} radius="xl">
+                        <IconBrain size={22} />
+                      </ThemeIcon>
+                      <Title order={3}>Research interests</Title>
+                      <SimpleGrid cols={2} spacing="sm">
+                        <Badge variant="light" color="teal" size="lg">
+                          AI / ML
+                        </Badge>
+                        <Badge variant="light" color="cyan" size="lg">
+                          Bioinformatics
+                        </Badge>
+                        <Badge variant="light" color="grape" size="lg">
+                          Neuroscience
+                        </Badge>
+                        <Badge variant="light" color="lime" size="lg">
+                          Scientific software
+                        </Badge>
+                      </SimpleGrid>
+                      <Text size="sm" c="dimmed">
+                        OpenChemLab is meant to grow into a collection of focused tools that make
+                        chemistry workflows easier to access, share, and teach.
+                      </Text>
+                    </Stack>
+                  </Card>
+                </Grid.Col>
+              </Grid>
+            </Paper>
+          </Stack>
+        </AppShell.Main>
+      </AppShell>
+    )
+  }
 
   async function handleUpload(files: FileWithPath[]) {
     const file = files[0]
@@ -286,6 +498,9 @@ function App() {
               Thermo RAW and mzML: maps, chromatograms, and spectra in the browser.
             </Text>
           </div>
+          <Button component="a" href="/" variant="subtle">
+            OpenChemLab home
+          </Button>
         </Group>
       </AppShell.Header>
 

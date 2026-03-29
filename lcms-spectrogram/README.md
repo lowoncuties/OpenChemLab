@@ -59,7 +59,8 @@ npm run dev
 
 Open:
 
-- frontend: `http://127.0.0.1:5173`
+- frontend landing page: `http://127.0.0.1:5173`
+- LC-MS workspace: `http://127.0.0.1:5173/lcms`
 - backend API: `http://127.0.0.1:8000`
 
 If you do nothing else, the app already works with:
@@ -125,6 +126,11 @@ This gives you a working deployment for:
 - the built-in demo dataset
 
 The app will be available on `http://<server>:8000` unless you change `LCMS_HTTP_PORT` in `.env`.
+
+Routes:
+
+- `/`: OpenChemLab landing page
+- `/lcms`: LC-MS workspace
 
 ### Caddy reverse proxy (public HTTPS)
 

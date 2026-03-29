@@ -16,6 +16,7 @@ LCMS Spectrogram is the first application in this repository. It provides:
 - optional Thermo `.raw` conversion through a separately installed ThermoRawFileParser
 - TIC, XIC, spectrum, and LC-MS map visualizations
 - small chemistry helpers for charge-state `m/z`, isotope spacing, and ppm error
+- an OpenChemLab landing page at `/` with the LC-MS workspace at `/lcms`
 
 Project-specific setup and deployment instructions live in [lcms-spectrogram/README.md](lcms-spectrogram/README.md).
 
@@ -102,4 +103,3 @@ OpenChemLab/
 │   └── scripts/
 └── README.md
 ```
-
