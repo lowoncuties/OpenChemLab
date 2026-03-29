@@ -219,7 +219,7 @@ npm run lint
 npm run build
 ```
 
-CI is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+CI is defined in [`.github/workflows/lcms-spectrogram-pr-gate.yml`](../.github/workflows/lcms-spectrogram-pr-gate.yml).
 
 ## ThermoRawFileParser licensing and citation
 
