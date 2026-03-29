@@ -163,8 +163,8 @@ function App() {
     ]
   }, [readySession])
 
-  const selectedRtLabel =
-    selectedRt === null ? 'No retention time selected' : `${formatFixed(selectedRt, 2)} min`
+  const selectedRtLabel = selectedRt === null ? 'No retention time selected' : `${formatFixed(selectedRt, 2)} min`
+  const selectedRtChipLabel = selectedRt === null ? 'Choose RT' : `RT ${formatFixed(selectedRt, 2)} min`
 
   if (!isWorkspace) {
     return (
@@ -315,9 +315,21 @@ function App() {
                       intersection of scientific tooling and accessible web software.
                     </Text>
                     <Text c="dimmed">
-                      The broader interests behind it include AI and machine learning research,
-                      bioinformatics, and neuroscience, with a strong focus on tools that are
-                      practical enough to matter in real educational and research settings.
+                      The creator's broader interests include AI and machine learning research,
+                      bioinformatics, and neuroscience, but those are personal interests rather
+                      than the core focus of this project.
+                    </Text>
+                    <Text c="dimmed">
+                      OpenChemLab came from a much simpler and more practical frustration: hearing
+                      chemistry students complain that they could not access important software
+                      because of licensing costs, platform limitations, or lab-only availability.
+                      So the goal here is straightforward: build useful browser-based tools that
+                      remove those barriers.
+                    </Text>
+                    <Text c="dimmed">
+                      The project was also built with AI-assisted development as part of that
+                      effort, using modern tools to create software that is more open and easier
+                      for others to access.
                     </Text>
                     <Group>
                       <Button
@@ -610,16 +622,23 @@ function App() {
           <Grid gutter="lg">
             <Grid.Col span={{ base: 12, lg: 8 }}>
               <Card withBorder radius="lg" padding="lg">
-                <Group justify="space-between" mb="sm">
+                <Group justify="space-between" align="flex-start" wrap="wrap" mb="sm">
                   <div>
                     <Title order={3}>LC-MS map</Title>
                     <Text size="sm" c="dimmed">
                       Click a point to inspect the nearest spectrum around that retention time.
                     </Text>
                   </div>
-                  <Badge leftSection={<IconDatabaseSearch size={14} />} variant="dot" color="violet">
-                    {selectedRtLabel}
-                  </Badge>
+                  <Paper className="status-pill" radius="xl" px="sm" py={6}>
+                    <Group gap={8} wrap="nowrap">
+                      <ThemeIcon color="violet" variant="light" size={22} radius="xl">
+                        <IconDatabaseSearch size={12} />
+                      </ThemeIcon>
+                      <Text size="sm" fw={600} className="status-pill-text">
+                        {selectedRtChipLabel}
+                      </Text>
+                    </Group>
+                  </Paper>
                 </Group>
                 {readySession?.heatmapPoints ? (
                   <Plot
@@ -751,16 +770,18 @@ function App() {
           <Grid gutter="lg">
             <Grid.Col span={{ base: 12, lg: 6 }}>
               <Card withBorder radius="lg" padding="lg">
-                <Group justify="space-between" mb="sm">
+                <Group justify="space-between" align="flex-start" wrap="wrap" mb="sm">
                   <div>
                     <Title order={3}>Total ion chromatogram</Title>
                     <Text size="sm" c="dimmed">
                       Click the TIC to update the active spectrum.
                     </Text>
                   </div>
-                  <Badge variant="light" color="teal">
-                    Selected: {selectedRtLabel}
-                  </Badge>
+                  <Paper className="status-pill status-pill-teal" radius="xl" px="sm" py={6}>
+                    <Text size="sm" fw={600} className="status-pill-text">
+                      {selectedRtChipLabel}
+                    </Text>
+                  </Paper>
                 </Group>
                 {readySession?.tic ? (
                   <Plot
