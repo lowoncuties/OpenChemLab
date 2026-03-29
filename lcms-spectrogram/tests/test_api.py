@@ -15,6 +15,8 @@ from backend.app.storage import SessionStore
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(api_main, "store", SessionStore(tmp_path / "sessions"))
     monkeypatch.setattr(api_main, "FRONTEND_DIST_DIR", tmp_path / "dist")
+    monkeypatch.setattr(api_main, "MAX_UPLOAD_BYTES", 100 * 1024 * 1024)
+    monkeypatch.setattr(api_main, "UPLOAD_RATE_LIMITER", api_main.UploadRateLimiter(10, 600))
     with TestClient(api_main.app) as test_client:
         yield test_client
 
@@ -71,6 +73,43 @@ def test_raw_upload_surfaces_conversion_errors(
     payload = response.json()
     assert payload["status"] == "conversion_error"
     assert "converter missing" in payload["message"]
+
+
+def test_upload_rejects_files_over_the_size_limit(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(api_main, "MAX_UPLOAD_BYTES", 256)
+
+    response = client.post(
+        "/api/uploads",
+        files={"file": ("large.mzML", b"x" * 2048, "application/xml")},
+    )
+
+    assert response.status_code == 413
+    assert "limit" in response.json()["detail"].lower()
+
+
+def test_upload_rate_limit_returns_429(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(api_main, "UPLOAD_RATE_LIMITER", api_main.UploadRateLimiter(1, 600))
+    monkeypatch.setattr(api_main, "parse_mzml_file", lambda _: generate_demo_dataset())
+
+    first_response = client.post(
+        "/api/uploads",
+        files={"file": ("first.mzML", b"<mzML />", "application/xml")},
+    )
+    second_response = client.post(
+        "/api/uploads",
+        files={"file": ("second.mzML", b"<mzML />", "application/xml")},
+    )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 429
+    assert second_response.headers["Retry-After"] == "600"
+    assert "too many uploads" in second_response.json()["detail"].lower()
 
 
 def test_chemistry_metrics_endpoint(client: TestClient) -> None:
