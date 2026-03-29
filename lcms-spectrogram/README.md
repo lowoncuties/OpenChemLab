@@ -126,6 +126,28 @@ This gives you a working deployment for:
 
 The app will be available on `http://<server>:8000` unless you change `LCMS_HTTP_PORT` in `.env`.
 
+### Caddy reverse proxy (public HTTPS)
+
+For a production layout where **apex** serves the app, **www** redirects to apex, and **api** hits the same backend (single container serves static UI and `/api/*`):
+
+1. Confirm DNS A/AAAA records for your apex, `www`, and `api` hostnames point at the server, and the host firewall allows **80** and **443**.
+2. Create a **local** Caddy config (never committed; see `.gitignore`):
+
+```bash
+cp deploy/caddy/Caddyfile.example deploy/caddy/Caddyfile
+# Edit deploy/caddy/Caddyfile: replace example.com / www / api hostnames with your real domains.
+```
+
+3. Start the app **and** Caddy (same Compose project network):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d --build
+```
+
+4. Caddy reads `deploy/caddy/Caddyfile` and obtains TLS certificates automatically. The app container is reached at `http://lcms-spectrogram:8000` from inside the Compose network.
+
+The built-in frontend uses same-origin `/api/...` calls when `VITE_API_BASE_URL` is empty (default), so the main UI works on your apex HTTPS URL without extra CORS. If you point the UI at a separate API host via `VITE_API_BASE_URL`, set `LCMS_CORS_ORIGINS` in `.env` to list your SPA origin (HTTPS) and rebuild the image so the frontend picks up `VITE_API_BASE_URL`.
+
 ### Docker deployment with Thermo RAW support
 
 1. Download and extract ThermoRawFileParser into:

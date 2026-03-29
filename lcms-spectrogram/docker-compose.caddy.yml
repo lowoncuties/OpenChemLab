@@ -1,0 +1,25 @@
+# Reverse proxy with automatic HTTPS. Use together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d --build
+#
+# Same Docker network as lcms-spectrogram so Caddy can reach http://lcms-spectrogram:8000.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: openchemlab-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      lcms-spectrogram:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  caddy_config:
