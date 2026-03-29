@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.coverage
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.env
+
+/images/
+/.data/
+/.tools/
+/ThermoRawFileReaderPackages/
+/ThermoRawFileParser/bin/
+/ThermoRawFileParser/obj/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/

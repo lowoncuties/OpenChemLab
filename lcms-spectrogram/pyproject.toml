@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lcms-spectrogram"
+version = "0.1.0"
+description = "Simple LC-MS viewer with RAW conversion support."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.116.1",
+    "lxml>=6.0.2",
+    "numpy>=2.3.3",
+    "pyteomics>=4.7.5",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.35.0",
+]
+
+[project.scripts]
+lcms-backend = "backend.app.main:run"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.4.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
