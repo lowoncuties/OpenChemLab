@@ -27,6 +27,7 @@ import {
   IconArrowRight,
   IconBrandGithub,
   IconBrain,
+  IconCup,
   IconChartDots3,
   IconDatabaseSearch,
   IconInfoCircle,
@@ -327,6 +328,16 @@ function App() {
                         leftSection={<IconBrandGithub size={16} />}
                       >
                         GitHub: @lowoncuties
+                      </Button>
+                      <Button
+                        component="a"
+                        href="https://buymeacoffee.com/lowoncuties"
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="light"
+                        leftSection={<IconCup size={16} />}
+                      >
+                        Buy me a coffee
                       </Button>
                     </Group>
                   </Stack>
