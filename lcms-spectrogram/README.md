@@ -70,6 +70,11 @@ If you do nothing else, the app already works with:
 - `.mzML` uploads
 - the built-in demo dataset
 
+Default upload guardrails:
+
+- maximum upload size: `500 MiB`
+- upload rate limit: `25` upload requests per `10` minutes per client IP
+
 ## Optional Thermo RAW support
 
 RAW conversion is optional. To enable it, install an official ThermoRawFileParser release separately.
@@ -134,6 +139,11 @@ Routes:
 - `/`: OpenChemLab landing page
 - `/lcms`: LC-MS workspace
 
+Public-server defaults:
+
+- uploads larger than `500 MiB` are rejected with `413 Request Entity Too Large`
+- repeated upload attempts from one client are throttled with `429 Too Many Requests`
+
 ### Caddy reverse proxy (public HTTPS)
 
 For a production layout where **apex** serves the app, **www** redirects to apex, and **api** hits the same backend (single container serves static UI and `/api/*`):
@@ -187,6 +197,28 @@ Notes:
 - the current session store is in-memory, so active sessions reset when the app process restarts
 - if you want the least restrictive deployment path, keep RAW conversion optional and rely on `.mzML`
 
+## Upload and abuse guardrails
+
+The backend now includes lightweight public-server protections:
+
+- a hard upload-size cap, defaulting to `500 MiB`
+- a per-client upload throttle, defaulting to `25` upload attempts per `600` seconds
+- upload filename sanitization before files are written into the session directory
+
+These checks are useful and worth keeping on, but they are not the same thing as full DDoS protection.
+
+Important distinction:
+
+- the application can reject oversized or repeated uploads once requests reach FastAPI
+- a reverse proxy, firewall, or CDN is still the right place to absorb abusive traffic before it reaches the Python app
+
+For a Hetzner deployment, the practical baseline is:
+
+1. Keep these app-level limits enabled.
+2. Put Caddy or Nginx in front of the app.
+3. Restrict direct public access to the backend port when you use a reverse proxy.
+4. Add host-level firewall rules and basic monitoring.
+
 ## Runtime configuration
 
 Environment variables used by the backend:
@@ -197,6 +229,9 @@ Environment variables used by the backend:
 - `LCMS_DATA_DIR`: writable session directory, defaults to `.data/sessions`
 - `LCMS_FRONTEND_DIST_DIR`: location of the built frontend, defaults to `frontend/dist`
 - `LCMS_CORS_ORIGINS`: comma-separated origins for cross-origin API access
+- `LCMS_MAX_UPLOAD_MB`: maximum upload size accepted by the backend, defaults to `500`
+- `LCMS_UPLOAD_RATE_LIMIT_COUNT`: number of upload attempts allowed per client within the window, defaults to `25`
+- `LCMS_UPLOAD_RATE_LIMIT_WINDOW_SECONDS`: upload throttle window, defaults to `600`
 - `THERMO_RAW_PARSER_BIN`: explicit ThermoRawFileParser executable or DLL path
 - `THERMO_RAW_PARSER_DIR`: directory containing an extracted ThermoRawFileParser release
 - `MSCONVERT_BIN`: optional explicit path to ProteoWizard `msconvert`

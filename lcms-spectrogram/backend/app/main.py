@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from collections import defaultdict, deque
+from ipaddress import ip_address
+from math import ceil
 from pathlib import Path
+import shutil
+from threading import Lock
+from time import monotonic
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +26,41 @@ from .storage import SessionStore
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIST_DIR = SETTINGS.frontend_dist_dir
 store = SessionStore(SETTINGS.data_dir)
+MAX_UPLOAD_BYTES = SETTINGS.max_upload_bytes
+
+
+class UploadTooLargeError(Exception):
+    pass
+
+
+class UploadRateLimiter:
+    def __init__(self, limit: int, window_seconds: int) -> None:
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._events: dict[str, deque[float]] = defaultdict(deque)
+        self._lock = Lock()
+
+    def check(self, client_key: str) -> int | None:
+        if self.limit <= 0 or self.window_seconds <= 0:
+            return None
+
+        now = monotonic()
+        cutoff = now - self.window_seconds
+
+        with self._lock:
+            events = self._events[client_key]
+            while events and events[0] <= cutoff:
+                events.popleft()
+            if len(events) >= self.limit:
+                return max(1, ceil(self.window_seconds - (now - events[0])))
+            events.append(now)
+        return None
+
+
+UPLOAD_RATE_LIMITER = UploadRateLimiter(
+    SETTINGS.upload_rate_limit_count,
+    SETTINGS.upload_rate_limit_window_seconds,
+)
 
 app = FastAPI(
     title="LCMS RAW Viewer",
@@ -35,6 +76,18 @@ if SETTINGS.cors_origins:
     )
 
 
+@app.middleware("http")
+async def upload_guardrails(request: Request, call_next) -> Response:
+    if request.method == "POST" and request.url.path == "/api/uploads":
+        rate_limit_response = _enforce_upload_rate_limit(request)
+        if rate_limit_response is not None:
+            return rate_limit_response
+        content_length_response = _enforce_content_length_limit(request)
+        if content_length_response is not None:
+            return content_length_response
+    return await call_next(request)
+
+
 class ChemistryRequest(BaseModel):
     neutral_mass: float = Field(..., gt=0)
     charge: int
@@ -48,10 +101,91 @@ class ChemistryRequest(BaseModel):
         return value
 
 
+def _format_byte_size(size: int) -> str:
+    units = ["B", "KiB", "MiB", "GiB", "TiB"]
+    value = float(size)
+    for unit in units:
+        if value < 1024 or unit == units[-1]:
+            if unit == "B":
+                return f"{int(value)} {unit}"
+            if value.is_integer():
+                return f"{int(value)} {unit}"
+            return f"{value:.1f} {unit}"
+        value /= 1024
+    return f"{size} B"
+
+
+def _is_private_proxy_hop(client_host: str | None) -> bool:
+    if not client_host:
+        return False
+    try:
+        client_ip = ip_address(client_host)
+    except ValueError:
+        return False
+    return client_ip.is_private or client_ip.is_loopback or client_ip.is_link_local
+
+
+def _client_key(request: Request) -> str:
+    client_host = request.client.host if request.client else None
+    if _is_private_proxy_hop(client_host):
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        forwarded_ip = forwarded_for.split(",")[0].strip()
+        if forwarded_ip:
+            return forwarded_ip
+        real_ip = request.headers.get("x-real-ip", "").strip()
+        if real_ip:
+            return real_ip
+    if client_host:
+        return client_host
+    return "unknown"
+
+
+def _safe_upload_filename(filename: str | None) -> str:
+    candidate = Path(filename or "uploaded-file").name.strip()
+    return candidate or "uploaded-file"
+
+
+def _enforce_upload_rate_limit(request: Request) -> Response | None:
+    retry_after = UPLOAD_RATE_LIMITER.check(_client_key(request))
+    if retry_after is None:
+        return None
+    return JSONResponse(
+        {
+            "detail": (
+                f"Too many uploads from this client. Try again in about {retry_after} seconds."
+            )
+        },
+        status_code=429,
+        headers={"Retry-After": str(retry_after)},
+    )
+
+
+def _enforce_content_length_limit(request: Request) -> Response | None:
+    content_length = request.headers.get("content-length")
+    if not content_length:
+        return None
+    try:
+        declared_size = int(content_length)
+    except ValueError:
+        return None
+    if declared_size <= MAX_UPLOAD_BYTES:
+        return None
+    return JSONResponse(
+        {"detail": f"Upload exceeds the {_format_byte_size(MAX_UPLOAD_BYTES)} limit."},
+        status_code=413,
+    )
+
+
 async def _save_upload(file: UploadFile, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
+    bytes_written = 0
     with destination.open("wb") as handle:
         while chunk := await file.read(1024 * 1024):
+            bytes_written += len(chunk)
+            if bytes_written > MAX_UPLOAD_BYTES:
+                raise UploadTooLargeError(
+                    f"Upload exceeds the {_format_byte_size(MAX_UPLOAD_BYTES)} limit."
+                )
             handle.write(chunk)
 
 
@@ -112,9 +246,13 @@ def create_demo_session() -> dict[str, object]:
 @app.post("/api/uploads")
 async def upload_dataset(file: UploadFile = File(...)) -> dict[str, object]:
     session_id, session_dir = store.create_session_dir()
-    filename = file.filename or "uploaded-file"
+    filename = _safe_upload_filename(file.filename)
     source_path = session_dir / filename
-    await _save_upload(file, source_path)
+    try:
+        await _save_upload(file, source_path)
+    except UploadTooLargeError as error:
+        shutil.rmtree(session_dir, ignore_errors=True)
+        raise HTTPException(status_code=413, detail=str(error)) from error
 
     suffix = source_path.suffix.lower()
     try:
