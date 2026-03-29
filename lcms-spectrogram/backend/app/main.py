@@ -156,7 +156,7 @@ async def upload_dataset(file: UploadFile = File(...)) -> dict[str, object]:
             status="conversion_error",
             message=str(error),
             notes=[
-                "RAW files are converted automatically with the bundled `ThermoRawFileParser` when it is available.",
+                "RAW files are converted automatically when an installed `ThermoRawFileParser` is available.",
                 "If the parser is not built yet, the backend can also fall back to ProteoWizard `msconvert`.",
                 "You can still use the demo dataset to try the interface while converter support is set up.",
             ],

@@ -2,7 +2,6 @@ services:
   lcms-spectrogram:
     build:
       context: .
-      target: ${DOCKER_BUILD_TARGET:-runtime}
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     image: lcms-spectrogram:${APP_IMAGE_TAG:-latest}
@@ -15,8 +14,11 @@ services:
       LCMS_PORT: 8000
       LCMS_DATA_DIR: /app/.data/sessions
       LCMS_CORS_ORIGINS: ${LCMS_CORS_ORIGINS:-}
+      THERMO_RAW_PARSER_BIN: ${THERMO_RAW_PARSER_BIN:-}
+      THERMO_RAW_PARSER_DIR: ${THERMO_RAW_PARSER_DIR:-}
     volumes:
       - lcms_data:/app/.data
+      - ./.tools:/app/.tools:ro
     healthcheck:
       test:
         [

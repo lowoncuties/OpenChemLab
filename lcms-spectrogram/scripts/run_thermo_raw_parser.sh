@@ -10,12 +10,8 @@ INPUT_PATH="$1"
 OUTPUT_DIR="$2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PARSER_DIR="${PROJECT_ROOT}/ThermoRawFileParser"
-PARSER_PROJECT="${PARSER_DIR}/ThermoRawFileParser.csproj"
-RAW_READER_PACKAGES_DIR="${THERMO_RAW_READER_PACKAGES_DIR:-${PROJECT_ROOT}/ThermoRawFileReaderPackages/Libs/NetCore/Net8}"
-RELEASE_DIR="${THERMO_RAW_PARSER_RELEASE_DIR:-${PROJECT_ROOT}/.tools/ThermoRawFileParser-osx-arm64}"
-RELEASE_BIN_DIR="${RELEASE_DIR}/osx-arm64"
-HOST_ARCH="$(uname -m)"
+TOOLS_DIR="${PROJECT_ROOT}/.tools"
+DEFAULT_PARSER_DIR="${TOOLS_DIR}/ThermoRawFileParser"
 
 mkdir -p "${OUTPUT_DIR}"
 
@@ -26,68 +22,65 @@ ARGS=(
   "-m=2"
 )
 
-if [ -n "${THERMO_RAW_PARSER_BIN:-}" ]; then
-  if [[ "${THERMO_RAW_PARSER_BIN}" == *.dll ]]; then
-    exec dotnet "${THERMO_RAW_PARSER_BIN}" "${ARGS[@]}"
+run_parser() {
+  local target="$1"
+  if [[ "${target}" == *.dll ]]; then
+    if ! command -v dotnet >/dev/null 2>&1; then
+      echo "ThermoRawFileParser DLL found at ${target}, but dotnet is not installed." >&2
+      exit 1
+    fi
+    exec dotnet "${target}" "${ARGS[@]}"
   fi
-  exec "${THERMO_RAW_PARSER_BIN}" "${ARGS[@]}"
-fi
-
-run_with_optional_rosetta() {
-  local binary="$1"
-  local binary_arch="$2"
-  if [ "${HOST_ARCH}" = "arm64" ] && [ "${binary_arch}" = "x64" ]; then
-    exec arch -x86_64 "${binary}" "${ARGS[@]}"
-  fi
-  exec "${binary}" "${ARGS[@]}"
+  exec "${target}" "${ARGS[@]}"
 }
 
-PARSER_BIN_CANDIDATES=(
-  "${PARSER_DIR}/publish/osx-x64/ThermoRawFileParser:x64"
-  "${RELEASE_BIN_DIR}/ThermoRawFileParser:arm64"
-  "${PARSER_DIR}/publish/osx-arm64/ThermoRawFileParser:arm64"
-  "${PARSER_DIR}/bin/arm64/Release/net8.0/osx-arm64/publish/ThermoRawFileParser:arm64"
-  "${PARSER_DIR}/bin/Release/net8.0/ThermoRawFileParser:x64"
-)
+try_parser_dir() {
+  local parser_dir="$1"
+  [ -d "${parser_dir}" ] || return 1
 
-for candidate in "${PARSER_BIN_CANDIDATES[@]}"; do
-  IFS=":" read -r binary binary_arch <<< "${candidate}"
-  if [ -x "${binary}" ]; then
-    run_with_optional_rosetta "${binary}" "${binary_arch}"
-  fi
-done
+  while IFS= read -r candidate; do
+    if [ -x "${candidate}" ]; then
+      run_parser "${candidate}"
+    fi
+  done < <(find "${parser_dir}" -maxdepth 5 -type f -name 'ThermoRawFileParser' | sort)
 
-PARSER_DLL_CANDIDATES=(
-  "${RELEASE_BIN_DIR}/ThermoRawFileParser.dll"
-  "${PARSER_DIR}/publish/osx-arm64/ThermoRawFileParser.dll"
-  "${PARSER_DIR}/bin/arm64/Release/net8.0/osx-arm64/ThermoRawFileParser.dll"
-  "${PARSER_DIR}/bin/Release/net8.0/ThermoRawFileParser.dll"
-)
+  while IFS= read -r candidate; do
+    if [ -f "${candidate}" ]; then
+      run_parser "${candidate}"
+    fi
+  done < <(find "${parser_dir}" -maxdepth 5 -type f -name 'ThermoRawFileParser.dll' | sort)
 
-for candidate in "${PARSER_DLL_CANDIDATES[@]}"; do
-  if [ -f "${candidate}" ]; then
-    exec dotnet "${candidate}" "${ARGS[@]}"
-  fi
-done
+  return 1
+}
 
-if [ ! -f "${PARSER_PROJECT}" ]; then
-  echo "ThermoRawFileParser project not found at ${PARSER_PROJECT}" >&2
-  exit 1
+if [ -n "${THERMO_RAW_PARSER_BIN:-}" ]; then
+  run_parser "${THERMO_RAW_PARSER_BIN}"
 fi
 
-DOTNET_RUN_ARGS=(
-  dotnet
-  run
-  --project
-  "${PARSER_PROJECT}"
-  --configuration
-  Release
-)
-
-if [ -d "${RAW_READER_PACKAGES_DIR}" ]; then
-  DOTNET_RUN_ARGS+=(--source "${RAW_READER_PACKAGES_DIR}")
+if [ -n "${THERMO_RAW_PARSER_DIR:-}" ]; then
+  try_parser_dir "${THERMO_RAW_PARSER_DIR}"
 fi
 
-DOTNET_RUN_ARGS+=(--source "https://api.nuget.org/v3/index.json" -- "${ARGS[@]}")
+try_parser_dir "${DEFAULT_PARSER_DIR}"
 
-exec "${DOTNET_RUN_ARGS[@]}"
+while IFS= read -r candidate_dir; do
+  try_parser_dir "${candidate_dir}"
+done < <(find "${TOOLS_DIR}" -maxdepth 1 -mindepth 1 -type d -name 'ThermoRawFileParser*' 2>/dev/null | sort)
+
+if command -v ThermoRawFileParser >/dev/null 2>&1; then
+  run_parser "$(command -v ThermoRawFileParser)"
+fi
+
+cat >&2 <<EOF
+ThermoRawFileParser was not found.
+
+Install an official ThermoRawFileParser release into:
+  ${DEFAULT_PARSER_DIR}
+
+or set one of:
+  THERMO_RAW_PARSER_BIN=/absolute/path/to/ThermoRawFileParser
+  THERMO_RAW_PARSER_BIN=/absolute/path/to/ThermoRawFileParser.dll
+  THERMO_RAW_PARSER_DIR=/absolute/path/to/extracted-release-directory
+EOF
+
+exit 1

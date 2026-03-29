@@ -4,89 +4,156 @@ LCMS Spectrogram is a small web app for chemistry and mass spectrometry students
 
 It provides:
 
-- Thermo `.raw` upload support through an optional backend converter
+- optional Thermo `.raw` upload support through an installed backend converter
 - direct `.mzML` upload support
 - a TIC view, XIC view, spectrum view, and zoomable LC-MS map
 - small chemistry helpers for charge-state `m/z`, isotope spacing, and ppm error
 - a built-in demo dataset for quick testing
 
-## Stack
+## Repository layout
 
 - `backend/`: FastAPI API and LC-MS parsing logic
 - `frontend/`: React + Vite UI
-- `Dockerfile`: single-container production build that serves frontend and API from the same origin
+- `Dockerfile`: single-container production image
 - `docker-compose.yml`: Linux deployment entrypoint
-- `ThermoRawFileParser/`: vendored ThermoRawFileParser source
+- `.tools/`: local, ignored install location for ThermoRawFileParser releases
 
-In production, the backend serves the built frontend directly. That removes the hardcoded localhost dependency and makes reverse-proxy or Docker deployment much simpler.
+`ThermoRawFileParser` is intentionally not committed in this repository. If you want RAW conversion, install it separately.
 
-## Local development
+## Quick start
 
-### Backend
+### 1. Clone and enter the app
+
+```bash
+cd OpenChemLab/lcms-spectrogram
+```
+
+### 2. Backend dependencies
 
 ```bash
 uv sync --dev
-uv run python main.py
 ```
 
-The API starts on `http://127.0.0.1:8000`.
-
-### Frontend
+### 3. Frontend dependencies
 
 ```bash
 cd frontend
 npm ci
+cd ..
+```
+
+### 4. Run the app locally
+
+Backend:
+
+```bash
+uv run python main.py
+```
+
+Frontend:
+
+```bash
+cd frontend
 npm run dev
 ```
 
-The frontend starts on `http://127.0.0.1:5173`.
+Open:
 
-## Production deployment on Linux
+- frontend: `http://127.0.0.1:5173`
+- backend API: `http://127.0.0.1:8000`
 
-### Default deployment
+If you do nothing else, the app already works with:
 
-The default Docker target ships the web app without Thermo RAW conversion. Students can still use:
-
-- direct `.mzML` uploads
+- `.mzML` uploads
 - the built-in demo dataset
 
-Steps:
+## Optional Thermo RAW support
+
+RAW conversion is optional. To enable it, install an official ThermoRawFileParser release separately.
+
+Recommended setup:
+
+1. Download the appropriate release for your platform from the official release page:
+   <https://github.com/compomics/ThermoRawFileParser/releases>
+2. Extract it into:
+
+```bash
+.tools/ThermoRawFileParser/
+```
+
+3. Make sure the executable ends up somewhere under that directory, for example:
+
+```text
+.tools/ThermoRawFileParser/ThermoRawFileParser
+```
+
+or:
+
+```text
+.tools/ThermoRawFileParser/linux-x64/ThermoRawFileParser
+```
+
+Alternative options:
+
+- set `THERMO_RAW_PARSER_BIN` to the executable or DLL path
+- set `THERMO_RAW_PARSER_DIR` to the extracted release directory
+- install `ThermoRawFileParser` on the system `PATH`
+
+If you already have a local ThermoRawFileParser source checkout, keep it out of git and point this app at the built executable or extracted release instead of committing the source tree.
+
+The app checks for ThermoRawFileParser in this order:
+
+1. `THERMO_RAW_PARSER_BIN`
+2. `THERMO_RAW_PARSER_DIR`
+3. `.tools/ThermoRawFileParser/` and similar `.tools/ThermoRawFileParser*` directories
+4. system `PATH`
+
+If ThermoRawFileParser is not installed, `.raw` uploads fail gracefully and users can still work with `.mzML` or the demo dataset.
+
+## Docker deployment on Linux
+
+### Minimal deployment
 
 ```bash
 cp .env.example .env
 docker compose up --build -d
 ```
+
+This gives you a working deployment for:
+
+- `.mzML` uploads
+- the built-in demo dataset
 
 The app will be available on `http://<server>:8000` unless you change `LCMS_HTTP_PORT` in `.env`.
 
-### Deployment with Thermo RAW conversion
+### Docker deployment with Thermo RAW support
 
-The repo includes an opt-in Docker build target called `runtime-thermo`. It builds a Linux ThermoRawFileParser binary and wires it into the backend automatically.
+1. Download and extract ThermoRawFileParser into:
 
-To enable it:
+```bash
+./.tools/ThermoRawFileParser/
+```
+
+2. Start the stack:
 
 ```bash
 cp .env.example .env
+docker compose up --build -d
 ```
 
-Set this in `.env`:
+`docker-compose.yml` mounts `./.tools` into the container automatically, so the backend can discover the parser without committing it to git.
+
+If the executable lives in a custom location inside the container, set one of these in `.env`:
 
 ```dotenv
-DOCKER_BUILD_TARGET=runtime-thermo
-```
-
-Then build and start:
-
-```bash
-docker compose up --build -d
+THERMO_RAW_PARSER_BIN=/app/.tools/ThermoRawFileParser/ThermoRawFileParser
+THERMO_RAW_PARSER_DIR=/app/.tools/ThermoRawFileParser
 ```
 
 Notes:
 
-- This target is meant for Linux servers.
-- Docker build will produce the correct Linux parser variant for `amd64` or `arm64`.
-- Thermo RAW conversion is intentionally not the default target because the Thermo RawFileReader terms are more restrictive than the ThermoRawFileParser Apache-2.0 source license.
-- The current session store is in-memory, so active sessions reset when the app process restarts.
+- the current session store is in-memory, so active sessions reset when the app process restarts
+- if you want the least restrictive deployment path, keep RAW conversion optional and rely on `.mzML`
 
 ## Runtime configuration
 
@@ -98,7 +165,8 @@ Environment variables used by the backend:
 - `LCMS_DATA_DIR`: writable session directory, defaults to `.data/sessions`
 - `LCMS_FRONTEND_DIST_DIR`: location of the built frontend, defaults to `frontend/dist`
 - `LCMS_CORS_ORIGINS`: comma-separated origins for cross-origin API access
-- `THERMO_RAW_PARSER_BIN`: optional explicit path to ThermoRawFileParser
+- `THERMO_RAW_PARSER_BIN`: explicit ThermoRawFileParser executable or DLL path
+- `THERMO_RAW_PARSER_DIR`: directory containing an extracted ThermoRawFileParser release
 - `MSCONVERT_BIN`: optional explicit path to ProteoWizard `msconvert`
 - `MSCONVERT_DOCKER_IMAGE`: optional Docker image for `msconvert`
 
@@ -127,8 +195,8 @@ ThermoRawFileParser itself is distributed under Apache-2.0, but the RAW conversi
 
 Project notes:
 
-- the app UI now includes the RawFileReader attribution notice
-- the Docker setup keeps Thermo support behind the explicit `runtime-thermo` target
+- the app UI includes the RawFileReader attribution notice
+- ThermoRawFileParser is not vendored into this repository
 - third-party licensing and citation details are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 If you publish scientific work that uses ThermoRawFileParser, cite:

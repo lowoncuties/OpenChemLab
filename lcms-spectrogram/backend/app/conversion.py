@@ -6,9 +6,7 @@ import subprocess
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-LOCAL_THERMO_RAW_PARSER_DIR = BASE_DIR / "ThermoRawFileParser"
-LOCAL_THERMO_RAW_PARSER_PROJECT = LOCAL_THERMO_RAW_PARSER_DIR / "ThermoRawFileParser.csproj"
-LOCAL_THERMO_RAW_PARSER_SCRIPT = BASE_DIR / "scripts" / "run_thermo_raw_parser.sh"
+THERMO_RAW_PARSER_SCRIPT = BASE_DIR / "scripts" / "run_thermo_raw_parser.sh"
 
 
 class ConversionError(RuntimeError):
@@ -39,39 +37,15 @@ def _thermo_raw_parser_command(input_path: Path, output_dir: Path) -> list[str] 
             return [dotnet_bin, str(parser_path), *args]
         return [str(parser_path), *args]
 
-    if LOCAL_THERMO_RAW_PARSER_SCRIPT.exists():
+    parser_from_path = shutil.which("ThermoRawFileParser")
+    if parser_from_path:
+        return [parser_from_path, *args]
+
+    if THERMO_RAW_PARSER_SCRIPT.exists():
         return [
-            str(LOCAL_THERMO_RAW_PARSER_SCRIPT),
+            str(THERMO_RAW_PARSER_SCRIPT),
             str(input_path),
             str(output_dir),
-        ]
-
-    if not LOCAL_THERMO_RAW_PARSER_PROJECT.exists():
-        return None
-
-    release_dll = (
-        LOCAL_THERMO_RAW_PARSER_DIR / "bin" / "Release" / "net8.0" / "ThermoRawFileParser.dll"
-    )
-    release_binary = LOCAL_THERMO_RAW_PARSER_DIR / "bin" / "Release" / "net8.0" / "ThermoRawFileParser"
-    if release_binary.exists():
-        return [str(release_binary), *args]
-    if release_dll.exists():
-        if not dotnet_bin:
-            raise ConversionError(
-                "A local ThermoRawFileParser build exists but `dotnet` is not installed."
-            )
-        return [dotnet_bin, str(release_dll), *args]
-
-    if dotnet_bin:
-        return [
-            dotnet_bin,
-            "run",
-            "--project",
-            str(LOCAL_THERMO_RAW_PARSER_PROJECT),
-            "--configuration",
-            "Release",
-            "--",
-            *args,
         ]
 
     return None
@@ -168,7 +142,7 @@ def convert_raw_to_mzml(input_path: Path, output_dir: Path) -> Path:
 
     if not errors:
         raise ConversionError(
-            "No RAW converter is configured. Use the bundled `ThermoRawFileParser`, set "
+            "No RAW converter is configured. Install ThermoRawFileParser separately, set "
             "`THERMO_RAW_PARSER_BIN`, install ProteoWizard `msconvert`, or configure "
             "`MSCONVERT_DOCKER_IMAGE` for Docker mode."
         )

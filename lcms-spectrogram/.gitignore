@@ -15,6 +15,7 @@ wheels/
 /images/
 /.data/
 /.tools/
+/ThermoRawFileParser/
 /ThermoRawFileReaderPackages/
 /ThermoRawFileParser/bin/
 /ThermoRawFileParser/obj/
