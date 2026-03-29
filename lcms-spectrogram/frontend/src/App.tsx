@@ -25,7 +25,6 @@ import {
   IconAtom2,
   IconChartDots3,
   IconDatabaseSearch,
-  IconFlask2,
   IconInfoCircle,
   IconScan,
   IconUpload,
@@ -269,7 +268,7 @@ function App() {
       const message = error instanceof Error ? error.message : 'Unable to compute chemistry metrics.'
       notifications.show({
         color: 'red',
-        title: 'Chemistry helper failed',
+        title: 'Calculation failed',
         message,
       })
     } finally {
@@ -282,14 +281,11 @@ function App() {
       <AppShell.Header className="app-header">
         <Group justify="space-between" align="center" h="100%" px="lg">
           <div>
-            <Title order={2}>LCMS RAW Viewer</Title>
+            <Title order={2}>LC–MS spectrogram</Title>
             <Text c="dimmed" size="sm">
-              Clean, beginner-friendly LC-MS browsing for Thermo RAW and mzML.
+              Thermo RAW and mzML: maps, chromatograms, and spectra in the browser.
             </Text>
           </div>
-          <Badge variant="light" color="violet">
-            React + FastAPI
-          </Badge>
         </Group>
       </AppShell.Header>
 
@@ -299,14 +295,10 @@ function App() {
             <Grid gutter="xl" align="center">
               <Grid.Col span={{ base: 12, md: 7 }}>
                 <Stack gap="sm">
-                  <Badge leftSection={<IconFlask2 size={14} />} variant="light" color="violet">
-                    Simple effective UI
-                  </Badge>
-                  <Title order={1}>Open, inspect, and navigate LC-MS data without vendor clutter.</Title>
+                  <Title order={1}>Retention time, m/z, and ion traces</Title>
                   <Text c="dimmed" size="md">
-                    Upload a Thermo RAW file and the backend will try to convert it to mzML. If
-                    converter support is not installed yet, you can still explore the interface
-                    with the built-in demo dataset.
+                    Upload Thermo RAW (converted server-side when a parser is configured) or mzML.
+                    Use the demo dataset if no file is available.
                   </Text>
                   <List
                     spacing="sm"
@@ -316,9 +308,9 @@ function App() {
                       </ThemeIcon>
                     }
                   >
-                    <List.Item>Navigate a 2D LC-MS map by retention time and m/z.</List.Item>
-                    <List.Item>Inspect TIC, XIC, and scan spectra with peak labels.</List.Item>
-                    <List.Item>Use quick helpers for charge-state m/z, isotope spacing, and ppm error.</List.Item>
+                    <List.Item>2D LC–MS map: retention time and m/z.</List.Item>
+                    <List.Item>TIC, XIC, and centroid spectrum with peak labels.</List.Item>
+                    <List.Item>Theoretical m/z, isotope spacing, and ppm error from mass and charge.</List.Item>
                   </List>
                 </Stack>
               </Grid.Col>
@@ -350,7 +342,7 @@ function App() {
                       </Group>
                     </Dropzone>
                     <Button variant="light" onClick={handleLoadDemo} loading={uploading}>
-                      Load demo dataset
+                      Load demo data
                     </Button>
                   </Stack>
                 </Card>
@@ -445,7 +437,7 @@ function App() {
                 ) : (
                   <div className="empty-state">
                     <IconScan size={34} />
-                    <Text>Upload data or load the demo dataset to see the LC-MS map.</Text>
+                    <Text>Upload a file or load demo data to show the map.</Text>
                   </div>
                 )}
               </Card>
@@ -454,9 +446,9 @@ function App() {
             <Grid.Col span={{ base: 12, lg: 4 }}>
               <Stack gap="lg">
                 <Card withBorder radius="lg" padding="lg">
-                  <Title order={3}>Chemistry helpers</Title>
+                  <Title order={3}>Mass and charge</Title>
                   <Text size="sm" c="dimmed" mb="md">
-                    Quick calculations for target selection and interpreting peaks.
+                    Theoretical m/z, isotope spacing, and ppm error.
                   </Text>
                   <Stack gap="sm">
                     <TextInput
@@ -478,7 +470,7 @@ function App() {
                       placeholder="optional"
                     />
                     <Button onClick={handleChemistry} loading={loadingChemistry}>
-                      Calculate helpers
+                      Calculate
                     </Button>
                   </Stack>
                   {chemistry && (
@@ -511,7 +503,7 @@ function App() {
                 </Card>
 
                 <Card withBorder radius="lg" padding="lg">
-                  <Title order={3}>What you can do</Title>
+                  <Title order={3}>Views</Title>
                   <List
                     mt="sm"
                     spacing="sm"
@@ -521,9 +513,9 @@ function App() {
                       </ThemeIcon>
                     }
                   >
-                    <List.Item>Use TIC to find where compounds elute over time.</List.Item>
-                    <List.Item>Use XIC to isolate a target mass window.</List.Item>
-                    <List.Item>Use scan spectra to inspect peaks and relative abundance.</List.Item>
+                    <List.Item>TIC: total ion signal vs. retention time.</List.Item>
+                    <List.Item>XIC: signal within a ppm window around a target m/z.</List.Item>
+                    <List.Item>Spectrum: m/z vs. intensity at the selected retention time.</List.Item>
                   </List>
                 </Card>
               </Stack>
@@ -721,11 +713,11 @@ function App() {
           </Card>
 
           <Alert variant="light" color="gray" icon={<IconInfoCircle size={18} />}>
-            <Text fw={600}>Third-party RAW conversion notice</Text>
+            <Text fw={600}>Thermo RAW conversion</Text>
             <Text size="sm" mt="xs">
-              Thermo RAW conversion support uses ThermoRawFileParser and the Thermo Fisher
-              RawFileReader SDK. RawFileReader reading tool. Copyright © 2016 by Thermo Fisher
-              Scientific, Inc. All rights reserved.
+              RAW conversion uses ThermoRawFileParser and the Thermo Fisher Scientific
+              RawFileReader SDK. Copyright © 2016 Thermo Fisher Scientific, Inc. All rights
+              reserved.
             </Text>
           </Alert>
         </Stack>

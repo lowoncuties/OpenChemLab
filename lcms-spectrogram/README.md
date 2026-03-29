@@ -165,6 +165,8 @@ docker compose up --build -d
 
 `docker-compose.yml` mounts `./.tools` into the container automatically, so the backend can discover the parser without committing it to git.
 
+The runtime image installs **ICU** (`libicu`) because the official Linux ThermoRawFileParser build is .NET and requires it at startup. If you still see an ICU error, rebuild with `docker compose build --no-cache` and redeploy. As a last resort, set `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` in the container environment (in `docker-compose.yml` under `environment:`) so .NET runs in invariant globalization mode—usually acceptable for this CLI.
+
 If the executable lives in a custom location inside the container, set one of these in `.env`:
 
 ```dotenv

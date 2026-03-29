@@ -14,8 +14,9 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build
 
 
-FROM python:3.13-slim AS runtime
+FROM python:3.13-slim-bookworm AS runtime
 
+# ThermoRawFileParser (.NET) needs ICU at runtime; slim images omit it.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -24,6 +25,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     LCMS_DATA_DIR=/app/.data/sessions
 
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libicu72 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml README.md main.py ./
 COPY backend/ ./backend/
