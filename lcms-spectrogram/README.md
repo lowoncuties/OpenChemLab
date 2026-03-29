@@ -10,6 +10,8 @@ It provides:
 - small chemistry helpers for charge-state `m/z`, isotope spacing, and ppm error
 - a built-in demo dataset for quick testing
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/lowoncuties)
+
 ## Repository layout
 
 - `backend/`: FastAPI API and LC-MS parsing logic
@@ -59,7 +61,8 @@ npm run dev
 
 Open:
 
-- frontend: `http://127.0.0.1:5173`
+- frontend landing page: `http://127.0.0.1:5173`
+- LC-MS workspace: `http://127.0.0.1:5173/lcms`
 - backend API: `http://127.0.0.1:8000`
 
 If you do nothing else, the app already works with:
@@ -126,6 +129,11 @@ This gives you a working deployment for:
 
 The app will be available on `http://<server>:8000` unless you change `LCMS_HTTP_PORT` in `.env`.
 
+Routes:
+
+- `/`: OpenChemLab landing page
+- `/lcms`: LC-MS workspace
+
 ### Caddy reverse proxy (public HTTPS)
 
 For a production layout where **apex** serves the app, **www** redirects to apex, and **api** hits the same backend (single container serves static UI and `/api/*`):
@@ -164,6 +172,8 @@ docker compose up --build -d
 ```
 
 `docker-compose.yml` mounts `./.tools` into the container automatically, so the backend can discover the parser without committing it to git.
+
+The runtime image installs **ICU** (`libicu`) because the official Linux ThermoRawFileParser build is .NET and requires it at startup. If you still see an ICU error, rebuild with `docker compose build --no-cache` and redeploy. As a last resort, set `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` in the container environment (in `docker-compose.yml` under `environment:`) so .NET runs in invariant globalization mode—usually acceptable for this CLI.
 
 If the executable lives in a custom location inside the container, set one of these in `.env`:
 

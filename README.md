@@ -1,5 +1,7 @@
 # OpenChemLab
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/lowoncuties)
+
 OpenChemLab is a monorepo for browser-based chemistry tools aimed at students, teachers, and researchers who should not be blocked by operating system limits or expensive vendor software.
 
 The goal is simple: make practical chemistry software available from the browser.
@@ -16,6 +18,7 @@ LCMS Spectrogram is the first application in this repository. It provides:
 - optional Thermo `.raw` conversion through a separately installed ThermoRawFileParser
 - TIC, XIC, spectrum, and LC-MS map visualizations
 - small chemistry helpers for charge-state `m/z`, isotope spacing, and ppm error
+- an OpenChemLab landing page at `/` with the LC-MS workspace at `/lcms`
 
 Project-specific setup and deployment instructions live in [lcms-spectrogram/README.md](lcms-spectrogram/README.md).
 
@@ -74,6 +77,10 @@ Then move into the component you want to work on. For example:
 cd lcms-spectrogram
 ```
 
+## Support
+
+If OpenChemLab is useful for your teaching or research, you can help sustain the project through [Buy Me a Coffee](https://buymeacoffee.com/lowoncuties).
+
 ## Licensing
 
 This repository includes a root [LICENSE](LICENSE).
@@ -102,4 +109,3 @@ OpenChemLab/
 │   └── scripts/
 └── README.md
 ```
-

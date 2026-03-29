@@ -8,6 +8,7 @@ import {
   Divider,
   Grid,
   Group,
+  Image,
   List,
   Loader,
   Paper,
@@ -23,16 +24,22 @@ import { Dropzone, type FileWithPath } from '@mantine/dropzone'
 import { notifications } from '@mantine/notifications'
 import {
   IconAtom2,
+  IconArrowRight,
+  IconBrandGithub,
+  IconBrain,
+  IconCup,
   IconChartDots3,
   IconDatabaseSearch,
-  IconFlask2,
   IconInfoCircle,
   IconScan,
+  IconSchool,
   IconUpload,
+  IconUsersGroup,
 } from '@tabler/icons-react'
 import Plotly from 'plotly.js-dist-min'
 import createPlotlyComponent from 'react-plotly.js/factory'
 import './App.css'
+import heroImage from './assets/hero.png'
 import {
   calculateChemistryMetrics,
   createDemoSession,
@@ -84,6 +91,9 @@ function pickDefaultRt(session: SessionResponse): number | null {
 }
 
 function App() {
+  const currentPath =
+    typeof window === 'undefined' ? '/' : window.location.pathname.replace(/\/+$/, '') || '/'
+  const isWorkspace = currentPath === '/lcms'
   const [session, setSession] = useState<SessionResponse | null>(null)
   const [selectedRt, setSelectedRt] = useState<number | null>(null)
   const [spectrum, setSpectrum] = useState<SpectrumResponse | null>(null)
@@ -153,8 +163,232 @@ function App() {
     ]
   }, [readySession])
 
-  const selectedRtLabel =
-    selectedRt === null ? 'No retention time selected' : `${formatFixed(selectedRt, 2)} min`
+  const selectedRtLabel = selectedRt === null ? 'No retention time selected' : `${formatFixed(selectedRt, 2)} min`
+  const selectedRtChipLabel = selectedRt === null ? 'Choose RT' : `RT ${formatFixed(selectedRt, 2)} min`
+
+  if (!isWorkspace) {
+    return (
+      <AppShell padding="md" header={{ height: 76 }}>
+        <AppShell.Header className="app-header">
+          <Group justify="space-between" align="center" h="100%" px="lg">
+            <div>
+              <Title order={2}>OpenChemLab</Title>
+              <Text c="dimmed" size="sm">
+                Browser-based chemistry tools for students, labs, and teaching teams.
+              </Text>
+            </div>
+            <Button component="a" href="/lcms" rightSection={<IconArrowRight size={16} />}>
+              Open LC-MS tool
+            </Button>
+          </Group>
+        </AppShell.Header>
+
+        <AppShell.Main className="landing-page">
+          <Stack gap="xl">
+            <Paper className="landing-hero" radius="xl" p="xl">
+              <Grid gutter="xl" align="center">
+                <Grid.Col span={{ base: 12, lg: 7 }}>
+                  <Stack gap="md">
+                    <Badge color="teal" variant="light" w="fit-content">
+                      OpenChemLab for accessible chemistry software
+                    </Badge>
+                    <Title order={1} className="landing-title">
+                      Chemistry tools that work in the browser, even when vendor software does not.
+                    </Title>
+                    <Text size="lg" c="dimmed">
+                      OpenChemLab is for students learning analytical chemistry, teachers preparing
+                      practical demonstrations, and small research teams who want shareable,
+                      browser-first workflows.
+                    </Text>
+                    <Group>
+                      <Button
+                        component="a"
+                        href="/lcms"
+                        size="md"
+                        rightSection={<IconArrowRight size={16} />}
+                      >
+                        Go to LC-MS spectrogram
+                      </Button>
+                      <Button component="a" href="#who-its-for" variant="light" size="md">
+                        Who is this for?
+                      </Button>
+                      <Button component="a" href="#about" variant="subtle" size="md">
+                        About the creator
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, lg: 5 }}>
+                  <Paper className="landing-visual" radius="xl" p="md">
+                    <Image
+                      src={heroImage}
+                      alt="OpenChemLab preview illustration"
+                      radius="lg"
+                      className="landing-image"
+                    />
+                  </Paper>
+                </Grid.Col>
+              </Grid>
+            </Paper>
+
+            <SimpleGrid id="who-its-for" cols={{ base: 1, md: 3 }} spacing="lg">
+              <Card className="landing-card" withBorder radius="xl" padding="lg">
+                <ThemeIcon color="teal" variant="light" size={44} radius="xl">
+                  <IconSchool size={22} />
+                </ThemeIcon>
+                <Title order={3} mt="md">
+                  Students
+                </Title>
+                <Text c="dimmed" mt="xs">
+                  Use modern chemistry tools without depending on Windows-only vendor software or
+                  lab-specific installations.
+                </Text>
+              </Card>
+
+              <Card className="landing-card" withBorder radius="xl" padding="lg">
+                <ThemeIcon color="grape" variant="light" size={44} radius="xl">
+                  <IconUsersGroup size={22} />
+                </ThemeIcon>
+                <Title order={3} mt="md">
+                  Teaching labs
+                </Title>
+                <Text c="dimmed" mt="xs">
+                  Share one browser-first workflow with a whole class instead of troubleshooting
+                  local desktop setup on every machine.
+                </Text>
+              </Card>
+
+              <Card className="landing-card" withBorder radius="xl" padding="lg">
+                <ThemeIcon color="cyan" variant="light" size={44} radius="xl">
+                  <IconChartDots3 size={22} />
+                </ThemeIcon>
+                <Title order={3} mt="md">
+                  Small research teams
+                </Title>
+                <Text c="dimmed" mt="xs">
+                  Put targeted tools online quickly so collaborators can inspect data from anywhere
+                  with a browser.
+                </Text>
+              </Card>
+            </SimpleGrid>
+
+            <Paper className="landing-callout" radius="xl" p="xl">
+              <Grid gutter="xl" align="center">
+                <Grid.Col span={{ base: 12, md: 8 }}>
+                  <Stack gap="sm">
+                    <Badge color="violet" variant="light" w="fit-content">
+                      Current tool
+                    </Badge>
+                    <Title order={2}>LC-MS Spectrogram</Title>
+                    <Text c="dimmed">
+                      Explore LC-MS maps, total ion chromatograms, extracted ion traces, and
+                      scan-level spectra from the browser. Thermo RAW is optional when a parser is
+                      installed; mzML works out of the box.
+                    </Text>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <Button
+                    component="a"
+                    href="/lcms"
+                    fullWidth
+                    size="md"
+                    rightSection={<IconArrowRight size={16} />}
+                  >
+                    Enter the LC-MS workspace
+                  </Button>
+                </Grid.Col>
+              </Grid>
+            </Paper>
+
+            <Paper id="about" className="about-panel" radius="xl" p="xl">
+              <Grid gutter="xl" align="center">
+                <Grid.Col span={{ base: 12, lg: 7 }}>
+                  <Stack gap="md">
+                    <Badge color="dark" variant="light" w="fit-content">
+                      About the creator
+                    </Badge>
+                    <Title order={2}>Built for people who deserve useful software, not unnecessary barriers.</Title>
+                    <Text c="dimmed" size="lg">
+                      OpenChemLab is shaped by a simple idea: meaningful software should help other
+                      people learn, explore, and do better work. The project sits at the
+                      intersection of scientific tooling and accessible web software.
+                    </Text>
+                    <Text c="dimmed">
+                      The creator's broader interests include AI and machine learning research,
+                      bioinformatics, and neuroscience, but those are personal interests rather
+                      than the core focus of this project.
+                    </Text>
+                    <Text c="dimmed">
+                      OpenChemLab came from a much simpler and more practical frustration: hearing
+                      chemistry students complain that they could not access important software
+                      because of licensing costs, platform limitations, or lab-only availability.
+                      So the goal here is straightforward: build useful browser-based tools that
+                      remove those barriers.
+                    </Text>
+                    <Text c="dimmed">
+                      The project was also built with AI-assisted development as part of that
+                      effort, using modern tools to create software that is more open and easier
+                      for others to access.
+                    </Text>
+                    <Group>
+                      <Button
+                        component="a"
+                        href="https://github.com/lowoncuties"
+                        target="_blank"
+                        rel="noreferrer"
+                        leftSection={<IconBrandGithub size={16} />}
+                      >
+                        GitHub: @lowoncuties
+                      </Button>
+                      <Button
+                        component="a"
+                        href="https://buymeacoffee.com/lowoncuties"
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="light"
+                        leftSection={<IconCup size={16} />}
+                      >
+                        Buy me a coffee
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, lg: 5 }}>
+                  <Card className="about-card" withBorder radius="xl" padding="lg">
+                    <Stack gap="md">
+                      <ThemeIcon color="dark" variant="light" size={46} radius="xl">
+                        <IconBrain size={22} />
+                      </ThemeIcon>
+                      <Title order={3}>Research interests</Title>
+                      <SimpleGrid cols={2} spacing="sm">
+                        <Badge variant="light" color="teal" size="lg">
+                          AI / ML
+                        </Badge>
+                        <Badge variant="light" color="cyan" size="lg">
+                          Bioinformatics
+                        </Badge>
+                        <Badge variant="light" color="grape" size="lg">
+                          Neuroscience
+                        </Badge>
+                        <Badge variant="light" color="lime" size="lg">
+                          Scientific software
+                        </Badge>
+                      </SimpleGrid>
+                      <Text size="sm" c="dimmed">
+                        OpenChemLab is meant to grow into a collection of focused tools that make
+                        chemistry workflows easier to access, share, and teach.
+                      </Text>
+                    </Stack>
+                  </Card>
+                </Grid.Col>
+              </Grid>
+            </Paper>
+          </Stack>
+        </AppShell.Main>
+      </AppShell>
+    )
+  }
 
   async function handleUpload(files: FileWithPath[]) {
     const file = files[0]
@@ -269,7 +503,7 @@ function App() {
       const message = error instanceof Error ? error.message : 'Unable to compute chemistry metrics.'
       notifications.show({
         color: 'red',
-        title: 'Chemistry helper failed',
+        title: 'Calculation failed',
         message,
       })
     } finally {
@@ -282,14 +516,14 @@ function App() {
       <AppShell.Header className="app-header">
         <Group justify="space-between" align="center" h="100%" px="lg">
           <div>
-            <Title order={2}>LCMS RAW Viewer</Title>
+            <Title order={2}>LC–MS spectrogram</Title>
             <Text c="dimmed" size="sm">
-              Clean, beginner-friendly LC-MS browsing for Thermo RAW and mzML.
+              Thermo RAW and mzML: maps, chromatograms, and spectra in the browser.
             </Text>
           </div>
-          <Badge variant="light" color="violet">
-            React + FastAPI
-          </Badge>
+          <Button component="a" href="/" variant="subtle">
+            OpenChemLab home
+          </Button>
         </Group>
       </AppShell.Header>
 
@@ -299,14 +533,10 @@ function App() {
             <Grid gutter="xl" align="center">
               <Grid.Col span={{ base: 12, md: 7 }}>
                 <Stack gap="sm">
-                  <Badge leftSection={<IconFlask2 size={14} />} variant="light" color="violet">
-                    Simple effective UI
-                  </Badge>
-                  <Title order={1}>Open, inspect, and navigate LC-MS data without vendor clutter.</Title>
+                  <Title order={1}>Retention time, m/z, and ion traces</Title>
                   <Text c="dimmed" size="md">
-                    Upload a Thermo RAW file and the backend will try to convert it to mzML. If
-                    converter support is not installed yet, you can still explore the interface
-                    with the built-in demo dataset.
+                    Upload Thermo RAW (converted server-side when a parser is configured) or mzML.
+                    Use the demo dataset if no file is available.
                   </Text>
                   <List
                     spacing="sm"
@@ -316,9 +546,9 @@ function App() {
                       </ThemeIcon>
                     }
                   >
-                    <List.Item>Navigate a 2D LC-MS map by retention time and m/z.</List.Item>
-                    <List.Item>Inspect TIC, XIC, and scan spectra with peak labels.</List.Item>
-                    <List.Item>Use quick helpers for charge-state m/z, isotope spacing, and ppm error.</List.Item>
+                    <List.Item>2D LC–MS map: retention time and m/z.</List.Item>
+                    <List.Item>TIC, XIC, and centroid spectrum with peak labels.</List.Item>
+                    <List.Item>Theoretical m/z, isotope spacing, and ppm error from mass and charge.</List.Item>
                   </List>
                 </Stack>
               </Grid.Col>
@@ -350,7 +580,7 @@ function App() {
                       </Group>
                     </Dropzone>
                     <Button variant="light" onClick={handleLoadDemo} loading={uploading}>
-                      Load demo dataset
+                      Load demo data
                     </Button>
                   </Stack>
                 </Card>
@@ -392,16 +622,23 @@ function App() {
           <Grid gutter="lg">
             <Grid.Col span={{ base: 12, lg: 8 }}>
               <Card withBorder radius="lg" padding="lg">
-                <Group justify="space-between" mb="sm">
+                <Group justify="space-between" align="flex-start" wrap="wrap" mb="sm">
                   <div>
                     <Title order={3}>LC-MS map</Title>
                     <Text size="sm" c="dimmed">
                       Click a point to inspect the nearest spectrum around that retention time.
                     </Text>
                   </div>
-                  <Badge leftSection={<IconDatabaseSearch size={14} />} variant="dot" color="violet">
-                    {selectedRtLabel}
-                  </Badge>
+                  <Paper className="status-pill" radius="xl" px="sm" py={6}>
+                    <Group gap={8} wrap="nowrap">
+                      <ThemeIcon color="violet" variant="light" size={22} radius="xl">
+                        <IconDatabaseSearch size={12} />
+                      </ThemeIcon>
+                      <Text size="sm" fw={600} className="status-pill-text">
+                        {selectedRtChipLabel}
+                      </Text>
+                    </Group>
+                  </Paper>
                 </Group>
                 {readySession?.heatmapPoints ? (
                   <Plot
@@ -445,7 +682,7 @@ function App() {
                 ) : (
                   <div className="empty-state">
                     <IconScan size={34} />
-                    <Text>Upload data or load the demo dataset to see the LC-MS map.</Text>
+                    <Text>Upload a file or load demo data to show the map.</Text>
                   </div>
                 )}
               </Card>
@@ -454,9 +691,9 @@ function App() {
             <Grid.Col span={{ base: 12, lg: 4 }}>
               <Stack gap="lg">
                 <Card withBorder radius="lg" padding="lg">
-                  <Title order={3}>Chemistry helpers</Title>
+                  <Title order={3}>Mass and charge</Title>
                   <Text size="sm" c="dimmed" mb="md">
-                    Quick calculations for target selection and interpreting peaks.
+                    Theoretical m/z, isotope spacing, and ppm error.
                   </Text>
                   <Stack gap="sm">
                     <TextInput
@@ -478,7 +715,7 @@ function App() {
                       placeholder="optional"
                     />
                     <Button onClick={handleChemistry} loading={loadingChemistry}>
-                      Calculate helpers
+                      Calculate
                     </Button>
                   </Stack>
                   {chemistry && (
@@ -511,7 +748,7 @@ function App() {
                 </Card>
 
                 <Card withBorder radius="lg" padding="lg">
-                  <Title order={3}>What you can do</Title>
+                  <Title order={3}>Views</Title>
                   <List
                     mt="sm"
                     spacing="sm"
@@ -521,9 +758,9 @@ function App() {
                       </ThemeIcon>
                     }
                   >
-                    <List.Item>Use TIC to find where compounds elute over time.</List.Item>
-                    <List.Item>Use XIC to isolate a target mass window.</List.Item>
-                    <List.Item>Use scan spectra to inspect peaks and relative abundance.</List.Item>
+                    <List.Item>TIC: total ion signal vs. retention time.</List.Item>
+                    <List.Item>XIC: signal within a ppm window around a target m/z.</List.Item>
+                    <List.Item>Spectrum: m/z vs. intensity at the selected retention time.</List.Item>
                   </List>
                 </Card>
               </Stack>
@@ -533,16 +770,18 @@ function App() {
           <Grid gutter="lg">
             <Grid.Col span={{ base: 12, lg: 6 }}>
               <Card withBorder radius="lg" padding="lg">
-                <Group justify="space-between" mb="sm">
+                <Group justify="space-between" align="flex-start" wrap="wrap" mb="sm">
                   <div>
                     <Title order={3}>Total ion chromatogram</Title>
                     <Text size="sm" c="dimmed">
                       Click the TIC to update the active spectrum.
                     </Text>
                   </div>
-                  <Badge variant="light" color="teal">
-                    Selected: {selectedRtLabel}
-                  </Badge>
+                  <Paper className="status-pill status-pill-teal" radius="xl" px="sm" py={6}>
+                    <Text size="sm" fw={600} className="status-pill-text">
+                      {selectedRtChipLabel}
+                    </Text>
+                  </Paper>
                 </Group>
                 {readySession?.tic ? (
                   <Plot
@@ -721,11 +960,11 @@ function App() {
           </Card>
 
           <Alert variant="light" color="gray" icon={<IconInfoCircle size={18} />}>
-            <Text fw={600}>Third-party RAW conversion notice</Text>
+            <Text fw={600}>Thermo RAW conversion</Text>
             <Text size="sm" mt="xs">
-              Thermo RAW conversion support uses ThermoRawFileParser and the Thermo Fisher
-              RawFileReader SDK. RawFileReader reading tool. Copyright © 2016 by Thermo Fisher
-              Scientific, Inc. All rights reserved.
+              RAW conversion uses ThermoRawFileParser and the Thermo Fisher Scientific
+              RawFileReader SDK. Copyright © 2016 Thermo Fisher Scientific, Inc. All rights
+              reserved.
             </Text>
           </Alert>
         </Stack>
