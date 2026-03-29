@@ -1,5 +1,7 @@
 # OpenChemLab
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/lowoncuties)
+
 OpenChemLab is a monorepo for browser-based chemistry tools aimed at students, teachers, and researchers who should not be blocked by operating system limits or expensive vendor software.
 
 The goal is simple: make practical chemistry software available from the browser.
@@ -74,6 +76,10 @@ Then move into the component you want to work on. For example:
 ```bash
 cd lcms-spectrogram
 ```
+
+## Support
+
+If OpenChemLab is useful for your teaching or research, you can help sustain the project through [Buy Me a Coffee](https://buymeacoffee.com/lowoncuties).
 
 ## Licensing
 

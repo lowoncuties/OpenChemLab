@@ -10,6 +10,8 @@ It provides:
 - small chemistry helpers for charge-state `m/z`, isotope spacing, and ppm error
 - a built-in demo dataset for quick testing
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy_me_a_coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/lowoncuties)
+
 ## Repository layout
 
 - `backend/`: FastAPI API and LC-MS parsing logic
